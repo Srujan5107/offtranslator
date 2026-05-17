@@ -15,18 +15,26 @@ from deep_translator import GoogleTranslator
 # Suppresses the known "SetVoiceByName failed" error on Linux/Streamlit Cloud
 try:
     from pyttsx3.drivers import espeak
-    _original_setProperty = espeak.EspeakDriver.setProperty
-    
-    def _patched_setProperty(self, name, value):
-        try:
-            _original_setProperty(self, name, value)
-        except ValueError as e:
-            if name == 'voice' and 'SetVoiceByName failed' in str(e):
-                pass  # Safely ignore the known espeak-ng alias error
-            else:
-                raise
-                
-    espeak.EspeakDriver.setProperty = _patched_setProperty
+    if not hasattr(espeak.EspeakDriver, '_is_patched'):
+        _original_setProperty = espeak.EspeakDriver.setProperty
+        
+        def _patched_setProperty(*args, **kwargs):
+            try:
+                try:
+                    _original_setProperty(*args, **kwargs)
+                except TypeError as te:
+                    if 'positional argument' in str(te) and len(args) > 1:
+                        _original_setProperty(*args[1:], **kwargs)
+                    else:
+                        raise
+            except ValueError as e:
+                if 'SetVoiceByName failed' in str(e):
+                    pass  # Safely ignore the known espeak-ng alias error
+                else:
+                    raise
+                    
+        espeak.EspeakDriver.setProperty = _patched_setProperty
+        espeak.EspeakDriver._is_patched = True
 except Exception:
     pass
 
@@ -169,4 +177,3 @@ with tab_voice:
         st.write(f"Mic: **{tgt_l}**")
         audio_2 = mic_recorder(start_prompt="Record", stop_prompt="Stop", key='m2')
         if audio_2: handle_voice(audio_2, tgt_l, src_l)
-            

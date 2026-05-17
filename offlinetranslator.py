@@ -49,10 +49,13 @@ def perform_tts(text, lang_code, mode):
         tts.save("temp_speech.mp3")
         st.audio("temp_speech.mp3", format="audio/mp3", autoplay=True)
     else:
-        engine = pyttsx3.init()
-        engine.save_to_file(text, "offline_speech.wav")
-        engine.runAndWait()
-        st.audio("offline_speech.wav", format="audio/wav", autoplay=True)
+        try:
+            engine = pyttsx3.init()
+            engine.save_to_file(text, "offline_speech.wav")
+            engine.runAndWait()
+            st.audio("offline_speech.wav", format="audio/wav", autoplay=True)
+        except Exception as e:
+            st.error(f"Offline audio generation failed. Please ensure 'espeak' is installed on your system. Details: {e}")
 
 # ----------------- 3. UI & LANGUAGE MAP -----------------
 st.set_page_config(page_title="Global Offline Translator", layout="wide")

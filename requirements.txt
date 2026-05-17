@@ -1,0 +1,9 @@
+streamlit
+pyttsx3
+torch
+faster-whisper
+transformers
+streamlit-mic-recorder
+gTTS
+SpeechRecognition
+deep-translator

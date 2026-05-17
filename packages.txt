@@ -1,2 +1,2 @@
-espeak
+espeak-ng
 ffmpeg

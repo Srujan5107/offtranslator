@@ -11,6 +11,25 @@ from gtts import gTTS
 import speech_recognition as sr
 from deep_translator import GoogleTranslator
 
+# --- Pyttsx3 espeak-ng Bug Workaround ---
+# Suppresses the known "SetVoiceByName failed" error on Linux/Streamlit Cloud
+try:
+    from pyttsx3.drivers import espeak
+    _original_setProperty = espeak.EspeakDriver.setProperty
+    
+    def _patched_setProperty(self, name, value):
+        try:
+            _original_setProperty(self, name, value)
+        except ValueError as e:
+            if name == 'voice' and 'SetVoiceByName failed' in str(e):
+                pass  # Safely ignore the known espeak-ng alias error
+            else:
+                raise
+                
+    espeak.EspeakDriver.setProperty = _patched_setProperty
+except Exception:
+    pass
+
 # ----------------- 1. DATABASE & ENGINES -----------------
 def init_local_db():
     conn = sqlite3.connect('global_translator.db')
@@ -150,3 +169,4 @@ with tab_voice:
         st.write(f"Mic: **{tgt_l}**")
         audio_2 = mic_recorder(start_prompt="Record", stop_prompt="Stop", key='m2')
         if audio_2: handle_voice(audio_2, tgt_l, src_l)
+            
